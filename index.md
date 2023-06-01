@@ -4,7 +4,7 @@ root: .  # Is the only page that doesn't follow the pattern /:path/index.html
 permalink: index.html  # Is the only page that doesn't follow the pattern /:path/index.html
 ---
 
-![](../assets/img/physobjlessonimage.PNG)
+![](/assets/img/physobjlessonimage.PNG)
 
 During the live workshop, we will focus on using traditional CMS ``physics objects" to design an analysis. This pre-reading is intended to familiarize you with how these objects are reconstructed by CMS and extracted from 2015 MiniAOD files by the Physics Object Extractor Tool package. 
 
