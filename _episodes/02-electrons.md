@@ -29,7 +29,7 @@ keypoints:
 
 ## Motivation
 
-At the equator of the workshop we will be working on the main activity, which is to attempt to replicate a [CMS physics analysis](https://link.springer.com/content/pdf/10.1007/JHEP09(2017)051.pdf) in a simplified way using modern analysis tools. The final state that we will be looking at contains electrons, muons and jets.  We are using these objects as examples to review the way in which we extract physics objects information.
+In the middle of the workshop we will be working on the main activity, which is to attempt to replicate a [CMS physics analysis](https://link.springer.com/content/pdf/10.1007/JHEP09(2017)051.pdf) in a simplified way using modern analysis tools. The final state that we will be looking at contains electrons, muons and jets.  We are using these objects as examples to review the way in which we extract physics objects information.
 
 The analysis requires some special variables, which we will have to figure out how to implement.
 
@@ -134,7 +134,7 @@ object classes.
 
 In the Multi-variate Analysis (MVA) approach, one forms a single discriminator variable that is computed based on multiple parameters of the electron object and provides the best separation between the signal and backgrounds by means of multivariate analysis methods and statistical learning tools. One can then cut on discriminator value or use the distribution of the values for a shape based statistical analysis.
 
-There are two basic types of MVAs that are usually provided:
+There are two basic types of MVAs that are were trained by CMS for 2015 MiniAOD electrons:
 
  * **the triggering MVA**: the discriminator is trained on the electrons that pass typical electron trigger requirements
  * **the non-triggering MVA**: the discriminator is trained on all electrons regardless of the trigger
@@ -155,8 +155,7 @@ The MVA training provides working points with decreased electron fake rate.
 
 ### Cut Based Electron ID
 
-Most `pat::<object>` classes contain member functions that return detector-related information. In the
-case of electrons, we see this information used as [identification criteria](https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/RecoEgamma/ElectronIdentification/python/Identification/cutBasedElectronID_Spring15_25ns_V1_cff.py):
+Electron identification can also be evaluated without MVAs, using a set of ["cut-based" identification criteria](https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/RecoEgamma/ElectronIdentification/python/Identification/cutBasedElectronID_Spring15_25ns_V1_cff.py):
 
 ~~~
 ...
@@ -189,112 +188,82 @@ electron_iso.push_back(el.ecalPFClusterIso());
 >Note: these POET implementations of identification working points are appropriate for 2015 data analysis.
 {: .testimonial}
 
->## Adding the sip3d variable for electrons
->
-> If you read the [article](https://link.springer.com/content/pdf/10.1007/JHEP09(2017)051.pdf) mentioned above, 
-> which we would like to partially reproduce, you
-> would encounter the usage of a variable which is described as:
->
-> > 
-> > *Nonprompt leptons that come from the decays of long-lived hadrons are rejected by requiring that the significance
-> > of the three-dimensional (3D) impact parameter of
-> > the lepton track, relative to the primary event vertex, is less than four standard deviations.
-> > This requirement effectively reduces the contamination from multijet events, while keeping
-> > a high efficiency for the signal*
-> > 
-> {: .testimonial}
->
-> Can you find this (`spi3d`) variable in the `ElectronAnalyzer` code? ... Well, if you couldn't it is because we do not have it (yet).  
->
-> As it turns out, implementing the `ip3d` variable is very simple because it is already availabe as an [accessible method](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/DataFormats/PatCandidates/interface/Electron.h#L208) in the class we use to access basically everything.  
-> However, its partner `sip3d` is not.
->
-> Your task will be to **implement this variable into the `ElectronAnalyzer.cc` so we can use it later in our simplified analysis replica.**
-> 
-> A few hints:
-> 
-> * There is an alternative way of accesing this `ip3d` variable, as you can see [here](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc#L586).  We would be, essentially, recomputing this variable
-> out of [transient tracks](https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideTransientTracks).  We can build transient tracks from our electron's track, which is easily accessible as you could note [here](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc#L576).
-> * What the code snippet above tells us is that the *significance* should come from an C++ object created by the [IPTools](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc#L29) class. 
-> * Exploring that class you will find the [appropriate C++ object](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/TrackingTools/IPTools/interface/IPTools.h#L25) and how to retrieve it.
-> * The C++ object name will naturally point you to the class to look at in the header of the *IPTools* class.  Once you find it, you will be able to identify the [needed method](https://github.com/cms-sw/cmssw/blob/166c583788b2da7130695c35d164184c786546b1/DataFormats/GeometryCommonDetAlgo/interface/Measurement1D.h#L29) for extracting the significance.
-> * You just need to digest all this information and implement it in the `ElectronAnalyzer.cc`. 
-> * Do not forget to add the TransientTrack and IPTools libraries to the `BuildFile.xml` of the package and recompile your code.
-> * Important note: transient tracks are built with information from the conditions database of the experiment and info about the magnetic field and geometry.  Therefore, to make your life a bit easier, we plainly ask you to include these lines in your `poet_cfg.py` file so you can have access to this information.  No more changes are needed in the config file. 
-> 
-> ~~~
-> #---- Needed configuration for dealing with transient tracks if required
-> process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
-> process.load("Configuration.Geometry.GeometryIdeal_cff")
-> process.load("Configuration.StandardSequences.MagneticField_cff")
->
-> #---- These two lines are needed if you require access to the conditions database. E.g., to get jet energy corrections, trigger prescales, etc.
-> process.load('Configuration.StandardSequences.Services_cff')
-> process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-> #---- If the container has local DB files available, uncomment lines like the ones below instead of the corresponding lines above
-> if isData: process.GlobalTag.connect = cms.string('sqlite_file:/cvmfs/cms-opendata-conddb.cern.ch/76X_dataRun2_16Dec2015_v0.db')
-> else: process.GlobalTag.connect = cms.string('sqlite_file:/cvmfs/cms-opendata-conddb.cern.ch/76X_mcRun2_asymptotic_RunIIFall15DR76_v1.db')
-> #---- The global tag must correspond to the needed epoch (comment out if no conditions needed)
-> if isData: process.GlobalTag.globaltag = '76X_dataRun2_16Dec2015_v0'
-> else: process.GlobalTag.globaltag = "76X_mcRun2_asymptotic_RunIIFall15DR76_v1"
-> ~~~
-> {: .language-python}
-> 
-> > ## Solution:
-> >
-> > We will add two variables. Let's see:
-> >
-> > The required std vector variables are the following:
-> > ~~~
-> > std::vector<double> electron_ip3d;	
-> > std::vector<double> electron_sip3d;
-> > ~~~
-> > {: .language-cpp}
-> > 
-> > The mtree variables could look like these:
-> > ~~~
-> > mtree->Branch("electron_ip3d",&electron_ip3d);
-> > mtree->GetBranch("electron_ip3d")->SetTitle("electron impact parameter in 3d");
-> > mtree->Branch("electron_sip3d",&electron_sip3d);
-> > mtree->GetBranch("electron_sip3d")->SetTitle("electron significance on impact parameter in 3d");
-> > ~~~
-> > {: .language-cpp}
-> >
-> > Note that mtree stores the information in each variable.
-> >
-> > Vector clearing:
-> > ~~~
-> > electron_ip3d.clear();
-> > electron_sip3d.clear();
-> > ~~~
-> > {: .language-cpp}
-> > 
-> > and finally almost at the bottom of the electron loop: 
-> > 
-> > ~~~
-> > ...
-> > electron_ismvaTight.push_back(el.electronID("mvaEleID-Spring15-25ns-nonTrig-V1-wp80"));
-> > 
-> > edm::ESHandle<TransientTrackBuilder> trackBuilder;
-> > iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
-> > reco::TransientTrack tt = trackBuilder->build(el.gsfTrack());
-> > std::pair<bool,Measurement1D> ip3dpv = IPTools::absoluteImpactParameter3D(tt, primaryVertex);
-> > electron_ip3d.push_back(ip3dpv.second.value());
-> > electron_sip3d.push_back(ip3dpv.second.significance());
-> >
-> > numelectron++;
-> > ...
-> > ~~~
-> > {: .language-cpp}
-> >
-> > Here are the files with the implemented solution.  We will pick up from here at the start of the *Muons* episode after the break.
-> >* Download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/poet_cfg.py_4)
-> > file and save it as `python/poet_cfg.py`
-> >* Download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/ElectronAnalyzer.cc_1) file and save it as `src/ElectronAnalyzer.cc`
-> >* Download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/BuildFile.xml_1) file and save it as `BuildFile.xml`
-> >
-> {: .solution}
-{: .challenge}
+### Electron impact parameter variables
 
+If you read the [article](https://link.springer.com/content/pdf/10.1007/JHEP09(2017)051.pdf) mentioned above, 
+which we would like to partially reproduce, you would encounter the usage of a variable which is described as:
+
+> 
+> *Nonprompt leptons that come from the decays of long-lived hadrons are rejected by requiring that the significance
+> of the three-dimensional (3D) impact parameter of
+> the lepton track, relative to the primary event vertex, is less than four standard deviations.
+> This requirement effectively reduces the contamination from multijet events, while keeping
+> a high efficiency for the signal*
+> 
+{: .testimonial}
+
+Can you find this (`spi3d`) variable in the `ElectronAnalyzer` code? ... 
+
+As it turns out, implementing the `ip3d` variable is very simple because it is already availabe as an [accessible method](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/DataFormats/PatCandidates/interface/Electron.h#L208) in the class we use to access basically everything.  
+However, its partner `sip3d` is not simple to implement.
+
+There is an alternative way of accesing this `ip3d` variable, as you can see [here](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc#L586).  We would be, essentially, recomputing this variable
+out of [transient tracks](https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideTransientTracks).  We can build transient tracks from our electron's track, which is easily accessible as you could note [here](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc#L576).
+
+What the code snippet above tells us is that the *significance* should come from an C++ object created by the [IPTools](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc#L29) class. Exploring that class you will find the [appropriate C++ object](https://github.com/cms-sw/cmssw/blob/fb9777b1d76e3896aff70a926799eb3ed514f168/TrackingTools/IPTools/interface/IPTools.h#L25) and how to retrieve it.
+
+The C++ object name will naturally point you to the class to look at in the header of the *IPTools* class.  Once you find it, you will be able to identify the [needed method](https://github.com/cms-sw/cmssw/blob/166c583788b2da7130695c35d164184c786546b1/DataFormats/GeometryCommonDetAlgo/interface/Measurement1D.h#L29) for extracting the significance.
+
+Whew! Implementing code for new detector-related variables is an exercise in C++ class reference searching! If you were implementing this from scratch you would have needed to:
+
+ * Add two vectors:
+~~~
+std::vector<double> electron_ip3d;	
+std::vector<double> electron_sip3d;
+~~~
+{: .language-cpp}
+
+ * Add two branches to the output tree:
+~~~
+mtree->Branch("electron_ip3d",&electron_ip3d);
+mtree->GetBranch("electron_ip3d")->SetTitle("electron impact parameter in 3d");
+mtree->Branch("electron_sip3d",&electron_sip3d);
+mtree->GetBranch("electron_sip3d")->SetTitle("electron significance on impact parameter in 3d");
+~~~
+{: .language-cpp}
+
+ * Clear the vectors before processing each event:
+Vector clearing:
+~~~
+electron_ip3d.clear();
+electron_sip3d.clear();
+~~~
+{: .language-cpp}
+
+ * Build transient tracks and compute the `sip3d` variables as instructed in the Software Guide (near the bottom of the `analyze` function):
+~~~
+...
+electron_ismvaTight.push_back(el.electronID("mvaEleID-Spring15-25ns-nonTrig-V1-wp80"));
+
+edm::ESHandle<TransientTrackBuilder> trackBuilder;
+iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
+reco::TransientTrack tt = trackBuilder->build(el.gsfTrack());
+std::pair<bool,Measurement1D> ip3dpv = IPTools::absoluteImpactParameter3D(tt, primaryVertex);
+electron_ip3d.push_back(ip3dpv.second.value());
+electron_sip3d.push_back(ip3dpv.second.significance());
+
+numelectron++;
+...
+~~~
+
+ * Add the TransientTrack and IPTools libraries to the `BuildFile.xml` of the package.
+
+The end!
+
+## Photons
+
+Since photons are also primarily reconstructed as electromagnetic calorimeter showers, the vast majority of their reconstruction methods are common with electrons.
+The `PhotonAnalyzer.cc` file contains representative photon information, including identification working points. Extra information can be found from the
+[2015 MiniAOD Workbook page](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD2015#Photons).
 
 {% include links.md %}

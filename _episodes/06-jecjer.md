@@ -202,7 +202,7 @@ jet_corrptSmearDown.push_back(ptscale_down*smearedjet.pt()/ptscale);
 ~~~
 {: .language-cpp}
 
-## Challenge activity (with solutions_
+## Challenge activity (with solutions)
 
 Open `myoutput.root` and investigate the range of momentum variation given by the JEC uncertainties by plotting: 
  * Corrected versus uncorrected jet momentum

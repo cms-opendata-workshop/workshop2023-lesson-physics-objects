@@ -21,11 +21,6 @@ keypoints:
 > ## Prerequisites
 >
 > * We will be still running on the `CMSSW` Docker container.  If you closed it for some reason, just fire it back up.
-> * During the last episode we made modifications to a few files.  If you fell behind, worry not, you can get the modifications with the files below:
->   * Download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/poet_cfg.py_4)
->   file and save it as `python/poet_cfg.py`
->   * Download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/ElectronAnalyzer.cc_1) file and save it as `src/ElectronAnalyzer.cc`
->   * Download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/BuildFile.xml_1) file and save it as `BuildFile.xml`
 >
 {: .prereq}
 
@@ -140,33 +135,7 @@ In contrast, a non-isolated muon can come from a weak decay inside a jet.
 Muon isolation is calculated from a combination of factors: energy from charged hadrons, energy from
 neutral hadrons, and energy from photons, all in a cone of radius $$ R = \sqrt{\eta^2 + \phi^2} < 0.3$$ or $$<0.4$$ around
 the muon. Many algorithms also feature a *correction factor* that subtracts average energy expected
-from pileup contributions to this cone -- we'll explore this later as an exercise. Decisions are made by comparing this energy sum to the
-transverse momentum of the muon.
-
-~~~
-auto iso04 = mu.pfIsolationR04();
-muon_pfreliso04all.push_back((iso04.sumChargedHadronPt + iso04.sumNeutralHadronEt + iso04.sumPhotonEt)/mu.pt());
-~~~
-{: .language-cpp}
-
-### Modifications to align with our target analysis
-
-For muons, we will also need the `sip3d` variable we included already for the electrons.  This is the next task:
-
-> ## Add the sip3d variable to muons
->
-> Now that you know the answer for electrons, it should be rather straight-forward to implent something similar for the muon analyzer.  Go ahead and make that change very quickly.  Don't forget to recompile and test.  Make sure the `myoutput.root` histogram contains this variable for muons as well as for electrons.
-> 
-> > ## Solution
-> >
-> > You can download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/MuonAnalyzer.cc_1) file and save it as `src/MuonAnalyzer.cc`.  Do not forget to recompile and run.
-> {: .solution}
-{: .challenge}
-
-Now, there is another variable that was used for our target analysis but doesn't exist in your `src/MuonAnalyzer.cc`.  
-
-Muon isolation is based on the sum of the $$p_{T}$$ of the charged and neutral hadrons as well as photons 
-reconstructed in a cone R=0.4 around the muon momentum. The sum of the $$p_{T}$$ of the charged hadrons associated to vertices other
+from pileup contributions to this con. The sum of the $$p_{T}$$ of the charged hadrons associated to vertices other
 than the primary vertex, is used to correct for pileup contamination in the total flux of neutrals found in the muon isolation cone. 
 A factor of $$\beta = 0.5$$ is used to scale this contribution as: 
 
@@ -174,20 +143,50 @@ $$
 I_{\mu} = \frac{1}{p_{T}}\cdot \displaystyle\Sigma_{R<0.4}\left[p_{T}^{ch}+{\rm max}(p_{T}^{\gamma}+p_{T}^{nh}-0.5\cdot p_{T}^{pu\ ch},0)\right]
 $$
 
+~~~
+auto iso04 = mu.pfIsolationR04();
+muon_pfreliso04all.push_back((iso04.sumChargedHadronPt + iso04.sumNeutralHadronEt + iso04.sumPhotonEt)/mu.pt());
+muon_pfreliso04DBCorr.push_back((iso04.sumChargedHadronPt + max(0., iso04.sumNeutralHadronEt + iso04.sumPhotonEt - 0.5*iso04.sumPUPt))/mu.pt());
+~~~
+{: .language-cpp}
 
-> ## Add the `pfreliso04DBCorr` variable
->
-> As you may notice, the so-called $$\beta$$ factor in the expression above was never included in our `MuonAnalyzer.cc`.  Your task consists of computing and adding this new relative isolation variable (we will call it `pfreliso04DBCorr`) to our analyzer.  Resist the urgency to look at the solution (it is truly very simple.)
->
-> These are some hints:
-> * We already have most of that variable implemented under other (very similar) reliso variable.
-> * Similar to, for instance, the method `.sumPhotonEt` of the `iso04` object, there must be another method which relates to the so-called pile-up contamination that we need.  You might need to do some detective work in order to find it.
-> * The *max* function in the expression above can be thought of just the C++ `std::max` function.
->
-> > ## Solution
-> >
-> > You can download [this](https://raw.githubusercontent.com/cms-opendata-analyses/PhysObjectExtractorTool/odws2022-poetlesson/PhysObjectExtractor/trunk/MuonAnalyzer.cc_2) file and save it as `src/MuonAnalyzer.cc`.  Do not forget to recompile and run.
-> {: .solution}
-{: .challenge}
+### Muon impact parameter significance
+
+For muons, we will also need the `sip3d` variable we included already for the electrons. The methods are analogous between the two particles:
+
+~~~
+//get impact parameter in 3D
+// https://github.com/cms-sw/cmssw/blob/CMSSW_7_6_X/PhysicsTools/PatAlgos/plugins/PATElectronProducer.cc
+// This is needed by the IPTools methods from the tracking group
+edm::ESHandle<TransientTrackBuilder> trackBuilder;
+iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
+reco::TransientTrack tt = trackBuilder->build(mu.muonBestTrack());
+std::pair<bool,Measurement1D> ip3dpv = IPTools::absoluteImpactParameter3D(tt, PV);
+muon_ip3d.push_back(ip3dpv.second.value());
+muon_sip3d.push_back(ip3dpv.second.significance());
+~~~
+{: .language-cpp}
+
+## Tau leptons
+
+The CMS Tau object group relies almost entirely on pre-computed algorithms to determine the
+quality of the tau reconstruction and the decay type. Since this object is not stable and has
+several decay modes, different combinations of identification and isolation algorithms are
+used across different analyses. The [Run 1 Tau ID page](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookPFTauTagging#Legacy_Tau_ID_Run_I) and [Nutshell Recipe](https://twiki.cern.ch/twiki/bin/view/CMSPublic/NutShellRecipeFor5312AndNewer) provide a large table of available algorithms.
+
+Accessing tau discriminators in MiniAOD files is considerably simpler than in Run 1. The `TauAnalyzer.cc`
+shows how to access representative tau discriminator flags.
+
+~~~
+tau_iddecaymode.push_back(tau.tauID("decayModeFinding"));
+tau_idisoraw.push_back(tau.tauID("byIsolationMVA3newDMwLTraw"));
+tau_idisovloose.push_back(tau.tauID("byVLooseIsolationMVA3newDMwLT"));
+tau_idisoloose.push_back(tau.tauID("byLooseIsolationMVA3newDMwLT")); 
+tau_idisomedium.push_back(tau.tauID("byMediumIsolationMVA3newDMwLT"));
+tau_idisotight.push_back(tau.tauID("byTightIsolationMVA3oldDMwLT"));
+tau_idantieletight.push_back(tau.tauID("againstElectronTightMVA5"));
+tau_idantimutight.push_back(tau.tauID("againstMuonTight3"));
+~~~
+{: .language-cpp}
 
 {% include links.md %}

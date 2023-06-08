@@ -41,7 +41,7 @@ For the current releases of open data, we store them in ROOT files following the
 
 In the [CERN Open Portal](http://opendata.cern.ch) (CODP) site one can find a more detailed description of these physical objects and a list of them corresponding to [2010](http://opendata.cern.ch/docs/cms-physics-objects-2010), [2011/2012](http://opendata.cern.ch/docs/cms-physics-objects-2011) from Run 1, and [2015](http://opendata.cern.ch/docs/cms-physics-objects-2015) (Run 2) releases of open data.
 
-In this workshop we will focus on working with open data from the **latest 2015 release** from Run 2.  However, you will get a taste of using Run 1 data as well, tomorrow.
+In this workshop we will focus on working with open data from the **latest 2015 release** from Run 2. 
 
 
 ## Physics Objects reconstruction
@@ -58,24 +58,22 @@ These actions are essential parts of the so-called **Particle Flow** (PF) algori
 
 The **particle-flow (PF) algorithm** aims at reconstructing and identifying all stable particles in the event, i.e., electrons, muons, photons, charged hadrons and neutral hadrons, with a thorough combination of all CMS sub-detectors towards an optimal determination of their direction, energy and type. This **list of individual particles is then used**, as if it came from a Monte-Carlo event generator, to build jets (from which the quark and gluon energies and directions are inferred), to determine the missing transverse energy (which gives an estimate of the direction and energy of the neutrinos and other invisible particles), to reconstruct and identify taus from their decay products and more.
 
-The PF algorithm and all its reconstruction *tributaries* are written in C++ and are part of the **CMSSW** software. The PF algorithm will be covered in detail during the Advanced Tools lesson of the live workshop.
+The PF algorithm and all its reconstruction tributaries are written in C++ and are part of the **CMSSW** software. The PF algorithm will be covered in detail during the [Advanced Tools lesson](https://cms-opendata-workshop.github.io/workshop2023-advobjects/) of the live workshop.
 
 ## The Physics Object Extractor Tool (POET)
 
-The 2015 POET repository instructions read *"... POET repository contains packages that **verse** instructions and examples on how to extract physics (objects) information from Run 2 (MiniAOD format) CMS open/legacy data and methods or tools needed for processing them"*
+The 2015 POET repository instructions read *"... POET repository contains packages that provide instructions and examples on how to extract physics (objects) information from Run 2 (MiniAOD format) CMS open/legacy data and methods or tools needed for processing them"*
 
-POET was thought, originally, as tool to **learn** how to use CMSSW to access objects in an easier fashion.  The code written by CMS experienced users could be extremely convoluted, but it all follows the same logic.  POET tries to show how to do it in a pedagogical way by separating the processing of different objects.  We will learn about this in this section.
-
-POET is just a **collection of CMSSW EDAnalyzers**, very similar to [the one](https://cms-opendata-workshop.github.io/workshop2022-lesson-cmssw/03-edanalyzers/index.html) your already worked with beforehand, the `DemoAnalyzer`.
+POET was thought, originally, as tool to **learn** how to use CMSSW to access objects in an easier fashion.  The code written by CMS experienced users can be extremely convoluted, but it all follows the same logic.  POET tries to show how to do it in a pedagogical way by separating the processing of different objects.  POET is just a **collection of CMSSW EDAnalyzers**, very similar to [the one](https://cms-opendata-workshop.github.io/workshop2023-lesson-cmssw/03-edanalyzers/index.html) your already worked with beforehand, the `DemoAnalyzer`. It is also similar in structure and content to ["NanoAOD"](https://github.com/cms-opendata-analyses/AOD2NanoAODOutreachTool), a CMS data format developed during Run 2 that is even smaller than MiniAOD. 
 
 
-We will learn about them in order to extract the information we need.  We will **focus** on getting our code in shape so we can perform a simplified analysis using 2015 Run 2 data. **Most users of Open Data will not need to edit or change the configuration of POET**: for any analysis that can be built using POET-like (or ``NanoAOD-like") ROOT files, POET could be run as a first step in a scaled-up analysis workflow. 
+We will learn about the EDAnalyzers in order to extract the information we need.  We will **focus** on getting our code in shape so we can perform a simplified analysis using 2015 Run 2 data. **Most users of Open Data will not need to edit or change the configuration of POET**: for any analysis that can be built using POET-like (or ``NanoAOD-like") ROOT files, POET could be run as a first step in a scaled-up analysis workflow. 
 
 ### How to run with POET
 
 As a useful reference, let us start with learning how to run with POET.
 
-First, fire up your [`CMSSW` Docker container](https://cms-opendata-workshop.github.io/workshop2022-lesson-docker/03-docker-for-cms-opendata/index.html#download-the-docker-image-for-cmssw-open-data-and-start-a-container) already used during the pre-exercises.
+First, fire up your [`CMSSW` Docker container](https://cms-opendata-workshop.github.io/workshop2023-lesson-docker/03-docker-for-cms-opendata/index.html#download-the-docker-image-for-cmssw-open-data-and-start-a-container) already used during the pre-exercises.
 
 ~~~
 docker start -i my_od #use the name you gave to yours
@@ -121,7 +119,7 @@ FatjetAnalyzer.cc    JetAnalyzer.cc          MuonAnalyzer.cc  SimpleEleMuFilter.
 ~~~ 
 {: .output}
 
-Then, it is no surprise that you will find the configurator python file inside the `python` directory.  There is just one configurator to configure anything that we want to do with POET.  It is called `poet_cfg.py`. Open it from you host machine, using your favorite editor.  This is what you will see:
+Then, it is no surprise that you will find the configuration python file inside the `python` directory.  There is one master configuration file to configure anything that we want to do with POET: `poet_cfg.py`. To begin with, let's study a short example, `poet_demo_cfg.py`. Open	`poet_demo_cfg.py` using a text editor, and this is what you will see:
 
 ~~~
 import FWCore.ParameterSet.Config as cms
@@ -194,7 +192,7 @@ else:
 {: .language-python}
 
 
-You already saw, in the pre-exercises, many of the features present in a regular configuration file.  The  `poet_cfg.py` file has more modules, however.  Let's understand what they do.
+You already saw, in the pre-exercises, many of the features present in a regular configuration file.  The  `poet_demo_cfg.py` file has more modules, however.  Let's understand what they do.
 
 The first addition you can see is the possibility of ingesting an argument from the user:
 
@@ -231,6 +229,14 @@ if isData:
         #'root://eospublic.cern.ch//eos/opendata/cms/Run2015D/DoubleMuon/MINIAOD/16Dec2015-v1/10000/000913F7-E9A7-E511-A286-003048FFD79C.root'
 	'root://eospublic.cern.ch//eos/opendata/cms/Run2015D/SingleElectron/MINIAOD/08Jun2016-v1/10000/001A703B-B52E-E611-BA13-0025905A60B6.root'
         )
+
+    #---- Apply the data quality JSON file filter. This example is for 2015 data
+    #---- It needs to be done after the process.source definition
+    #---- Make sure the location of the file agrees with your setup
+    goodJSON = "data/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_v2.txt"
+    myLumis = LumiList.LumiList(filename=goodJSON).getCMSSWString().split(",")
+    process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())
+    process.source.lumisToProcess.extend(myLumis) 
 
 ~~~ 
 {: .language-python}
@@ -313,10 +319,10 @@ vector<reco::VertexCompositePtrCandidate>    "slimmedSecondaryVertices"   ""    
 {: .output}
 
 
-This is essentially all the information you can get from MINIAOD files like this one. Put special attention to the anything related to *Electron(s)* or *Muon(s)*.  One thing you notice is that the acronym **PAT** is repeated several times.  PAT stands for Physics Analysis Tool and is a framework within CMSSW that is extensively used to refine the selection of physical objects in CMS.  The **RECO** variables are, however, lower level variables.  There are also some objects that will give you additional information, like the **HLT** *TriggerResults*, which we will cover tomorrow.
+This is essentially all the information you can get from MINIAOD files like this one. Put special attention to the anything related to *Electron(s)* or *Muon(s)*.  One thing you notice is that the acronym **PAT** is repeated several times.  PAT stands for Physics Analysis Toolkit and is a framework within CMSSW that is extensively used to refine the selection of physical objects in CMS.  The **RECO** variables are, however, lower level variables.  There are also some objects that will give you additional information, like the **HLT** *TriggerResults*, which we will cover separately.
 
 
-Next in the `poet_cfg.py` file, you will find a couple of modules that are evidently associated to EDAnalyzers that deal with electrons and muons:
+Next in the `poet_demo_cfg.py` file, you will find a couple of modules that are evidently associated to EDAnalyzers that deal with electrons and muons:
 
 ~~~
 #----- Configure POET analyzers -----#
@@ -333,7 +339,7 @@ process.mymuons = cms.EDAnalyzer('MuonAnalyzer',
 
 Remember, the construction `cms.EDAnalyzer('ElectronAnalyzer'`, for instance, automatically tells you that there must be an EDAnalyzer called `ElectronAnalyzer` somewhere in this package.  Indeed, if you list your `src` directory, you will find, among other EDAnalyzers (including the muon one), an `ElectronAnalyzer.cc` file.  So, this module `process.myelectrons` configures that C++ code.   Something similar is true for the `MuonAnalyzer`.  Also notice that `InputTag`s used in these modules correspond to the collections seen above when we dump the structure of the input file.
 
-Finally, among the new features present in `poet_cfg.py`, there is a `TFileService` module.  It is rather obvious that it will output a `ROOT` file called `myoutput.root`, which will most certainly contain the information that a given EDAnalyzer is spitting out.
+Finally, among the new features present in `poet_demo_cfg.py`, there is a `TFileService` module.  It is rather obvious that it will output a `ROOT` file called `myoutput.root`, which will most certainly contain the information that a given EDAnalyzer is spitting out.
 
 ~~~
 process.TFileService = cms.Service("TFileService", fileName=cms.string("myoutput.root"))
@@ -345,12 +351,12 @@ process.TFileService = cms.Service("TFileService", fileName=cms.string("myoutput
 >
 > Compile the code with `scram b` and then run POET twice with the `True` argument:
 > 
-> * First with `cmsRun python/poet_cfg.py True` 
-> * and then with just `cmsRun python/poet_cfg.py` (without the *True* boolean, so we run over MC simulations)
+> * First with `cmsRun python/poet_demo_cfg.py True` 
+> * and then with just `cmsRun python/poet_demo_cfg.py` (without the *True* boolean, so we run over MC simulations)
 >
 > Open the `myoutput.root` file that gets produced and have a quick look with the `TBrowser`.  
 >
-> You will notice that only `electron` variables got stored.  Can you fix the `poet_cfg.py` so we get the information from muons as well?
+> You will notice that only `electron` variables got stored.  Can you fix the `poet_demo_cfg.py` so we get the information from muons as well?
 >
 > > ## Solution
 > >
@@ -367,27 +373,10 @@ The detector is not perfect and sometimes there is a high voltage source that pe
 
 There is a tremendous effort by many people in the collaboration to assure the quality of our data.  We do this by keeping record of only the good LS in a json file.  For convinience, we have put this file in the `data` directory of the POET repository. More information can be found [here](https://opendata.cern.ch/record/14210).
 
-> ## Add data qualtiy to POET
-> 
-> In order to filter out those bad LS we need to add a special module to our `poet_cfg.py` file.  Follow the cues in the snippet below at place at the right location within the `poet_cfg.py` file and save it (in general the order of modules hardly matter for CMSSW config files; this one is an exception).  Run the configuration again to make sure nothing breaks.  It is possible that you don't see anything chaning due to very few events we are running with (100).
->
-> ~~~
-> #---- Apply the data quality JSON file filter. This example is for 2015 data
-> #---- It needs to be done after the process.source definition
-> #---- Make sure the location of the file agrees with your setup
-> goodJSON = "data/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_v2.txt"
-> myLumis = LumiList.LumiList(filename=goodJSON).getCMSSWString().split(",")
-> process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())
-> process.source.lumisToProcess.extend(myLumis) 
-> ~~~ 
-> {: .language-python}
->
-{: .challenge}
-
 
 ### Add a new physics object to the configuration
 
-You can see in the `src` directory that there is already code for many other objects, not just electrons or muons.  Some of these EDAnalyzers are complete while others are still being developed.
+You can see in the `src` directory that there is already code for many other objects, not just electrons or muons. Let's add collision vertices to our output file.
 
 > ## Adding primary vertices
 >

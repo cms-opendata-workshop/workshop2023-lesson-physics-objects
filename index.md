@@ -14,7 +14,7 @@ During the live workshop, we will focus on using traditional CMS ``physics objec
 
 > ## Prerequisites
 > 
-> * For this lesson we will be using the [`CMSSW` Docker container](https://cms-opendata-workshop.github.io/workshop2023-lesson-docker/03-docker-for-cms-opendata/index.html#download-the-docker-image-for-cmssw-open-data-and-start-a-container) you already used during the pre-exercises.
+> * For this lesson we will be using the [`CMSSW` Docker container](https://cms-opendata-workshop.github.io/workshop2023-lesson-docker/03-docker-for-cms-opendata/index.html#download-the-docker-image-for-cmssw-open-data-and-start-a-container) you already used during the pre-exercises. Note: if you have the Apple M1/M2 chips, you are likely unable to perform cmsRun jobs in this container, but you could still investigate the code either in the container or on github.
 > * After you completed the pre-exercises, you should have now a good understanding about `ROOT` and the basic aspects of `CMSSW`.
 >
 {: .prereq}
