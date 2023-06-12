@@ -242,7 +242,6 @@ electron_sip3d.clear();
 
  * Build transient tracks and compute the `sip3d` variables as instructed in the Software Guide (near the bottom of the `analyze` function):
 ~~~
-...
 electron_ismvaTight.push_back(el.electronID("mvaEleID-Spring15-25ns-nonTrig-V1-wp80"));
 
 edm::ESHandle<TransientTrackBuilder> trackBuilder;
@@ -253,7 +252,6 @@ electron_ip3d.push_back(ip3dpv.second.value());
 electron_sip3d.push_back(ip3dpv.second.significance());
 
 numelectron++;
-...
 ~~~
 {: .language-cpp}
 
