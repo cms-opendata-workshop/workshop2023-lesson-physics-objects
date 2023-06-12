@@ -255,6 +255,7 @@ electron_sip3d.push_back(ip3dpv.second.significance());
 numelectron++;
 ...
 ~~~
+{: .language-cpp}
 
  * Add the TransientTrack and IPTools libraries to the `BuildFile.xml` of the package.
 

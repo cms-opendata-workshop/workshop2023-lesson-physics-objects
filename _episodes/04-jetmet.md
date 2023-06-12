@@ -33,7 +33,7 @@ keypoints:
 > ~~~
 > {: .language-python}
 >
-> If you are not able to run POET, try downloading this output file from [CERNbox](FIXME).
+> If you are not able to run POET, try downloading this output file from [CERNbox](https://cernbox.cern.ch/s/Hw0pS87ua32btvZ).
 >
 >And run POET using `cmsRun python/poet_cfg.py`.
 {: .prereq}

@@ -154,7 +154,12 @@ process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
 #---- Select the maximum number of events to process (if -1, run over all events)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
-
+#---------------------------------------------------- 
+#---- More configuration skipped here in the webpage
+#----     |
+#----     |
+#----     v
+#---------------------------------------------------- 
 
 #---- Define the test source files to be read using the xrootd protocol (root://), or local files (file:)
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
